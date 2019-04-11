@@ -6,7 +6,7 @@ services:
       - DD_API_KEY
       - DD_APM_ENABLED=true
       - DD_PROCESS_AGENT_ENABLED=true
-      - DD_TAGS='env:apm-workshop'
+      - DD_TAGS='env:log-workshop'
     ports:
       - "8126:8126"
     volumes:
