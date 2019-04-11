@@ -79,7 +79,7 @@ services:
 
   redis:
     image: "redis:5.0-rc4-alpine"
-     depends_on:
+    depends_on:
       - agent
 
   sensors:
