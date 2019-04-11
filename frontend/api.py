@@ -37,18 +37,21 @@ def system_status():
 def users():
     if flask_request.method == 'POST':
         newUser = flask_request.get_json()
+        app.logger.info(f"Adding new user: {newUser}")
         userStatus = requests.post('http://noder:5004/users', json=newUser).json()
         return jsonify(userStatus)
     elif flask_request.method == 'GET':
+        app.logger.info(f"Getting all users")
         users = requests.get('http://noder:5004/users').json()
         return jsonify(users)
 
 @app.route('/add_sensor')
 def add_sensor():
+    app.logger.info('Adding a new sensor')
     sensors = requests.post('http://sensors:5002/sensors').json()
     app.logger.info(f"Adding {sensors}")
     return jsonify(sensors)
-    
+
 @app.route('/add_pump', methods=['POST'])
 def add_pump():
     pumps = requests.post('http://pumps:5001/devices').json()
@@ -58,20 +61,16 @@ def add_pump():
 @app.route('/generate_requests', methods=['POST'])
 def call_generate_requests():
     payload = flask_request.get_json()
-    span = tracer.current_span()
-    app.logger.info(f"Looking at {span}")
-    app.logger.info(f"with span id {span.span_id}")
-
-    span = tracer.current_span()
-    
+    span = tracer.current_root_span()
+    span.context.sampling_priority = USER_KEEP
     span.set_tags({'requests': payload['total'], 'concurrent': payload['concurrent']})
 
     output = subprocess.check_output(['/app/traffic_generator.py',
-                                      str(payload['concurrent']), 
+                                      str(payload['concurrent']),
                                       str(payload['total']),
                                       str(payload['url'])])
     app.logger.info(f"Result for subprocess call: {output}")
-    return jsonify({'traffic': str(payload['concurrent']) + ' concurrent requests generated, ' + 
+    return jsonify({'traffic': str(payload['concurrent']) + ' concurrent requests generated, ' +
                                str(payload['total'])  + ' requests total.',
                     'url': payload['url']})
 
@@ -81,7 +80,7 @@ def call_generate_requests():
 def call_generate_requests_user():
     users = requests.get('http://noder:5004/users').json()
     user = random.choice(users)
-    span = tracer.current_span()
+    span = tracer.current_root_span()
     span.context.sampling_priority = USER_KEEP
     span.set_tags({'user_id': user['id']})
 
@@ -94,5 +93,6 @@ def call_generate_requests_user():
 
 @app.route('/simulate_sensors')
 def simulate_sensors():
+    app.logger.info('Simulating refresh of sensor data')
     sensors = requests.get('http://sensors:5002/refresh_sensors').json()
     return jsonify(sensors)

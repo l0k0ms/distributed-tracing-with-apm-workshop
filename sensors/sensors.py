@@ -9,6 +9,7 @@ from bootstrap import create_app, db
 from models import Network, Sensor
 
 import random
+import time
 
 sensors = []
 
@@ -23,6 +24,7 @@ def get_sensors():
     if flask_request.method == 'GET':
         sensors = Sensor.query.all()
         system_status = []
+        time.sleep(1.2)
         for sensor in sensors:
             system_status.append(sensor.serialize())
         app.logger.info(f'Sensors GET called with a total of {len(system_status)}')
@@ -30,6 +32,7 @@ def get_sensors():
                         'system_status': system_status})
     elif flask_request.method == 'POST':
         sensors.append({'sensor_no': len(sensors) + 1, 'value': random.randint(1,100)})
+        app.logger.info(f"Sensor number {len(sensors)} created")
         return jsonify(sensors)
     else:
         err = jsonify({'error': 'Invalid request method'})
@@ -38,10 +41,12 @@ def get_sensors():
 
 @app.route('/sensors/<id>/')
 def sensor(id):
+    app.logger.info(f"Getting info for sensor {id}")
     return jsonify(Sensor.query.get(id).serialize())
 
 @app.route('/refresh_sensors')
 def refresh_sensors():
+    app.logger.info("Calling refresh sensor simulator")
     sensors = simulate_all_sensors()
     return jsonify({'sensor_count': len(sensors),
                     'system_status': sensors})
@@ -53,4 +58,5 @@ def simulate_all_sensors():
         sensor.value = random.randint(1,100)
     db.session.add_all(sensors)
     db.session.commit()
+    app.logger.info("Sensor data updated")
     return [s.serialize() for s in sensors]
