@@ -110,12 +110,8 @@ services:
       - db
 
   db:
-    build: ./postgresql
-  #  image: postgres:11-alpine
-  #  restart: always
-  #  volumes:
-  #    - ./conf.d/postgres.d/postgres.conf:/etc/postgresql/postgresql.conf
-  #  command: postgres11 -c config_file=/etc/postgresql/postgresql.conf
+    image: postgres:11-alpine
+    restart: always
     depends_on:
       - agent
     environment:
