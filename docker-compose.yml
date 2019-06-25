@@ -112,6 +112,9 @@ services:
   db:
     image: postgres:11-alpine
     restart: always
+    volumes:
+      - ./conf.d/postgres.d/postgres.conf:/etc/postgresql/postgresql.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     depends_on:
       - agent
     environment:
