@@ -83,7 +83,7 @@ services:
         - "6379:6379"
     command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
-      - ./conf.d/redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./conf.d/redis.d/redis.conf:/usr/local/etc/redis/redis.conf
     depends_on:
       - agent
 
