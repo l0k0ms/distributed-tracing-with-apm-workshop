@@ -1,12 +1,14 @@
 version: '3'
 services:
   agent:
-    image: "datadog/agent:6.11.0"
+    image: "datadog/agent:6.13.0"
     environment:
       - DD_API_KEY
       - DD_APM_ENABLED=true
       - DD_PROCESS_AGENT_ENABLED=true
       - DD_TAGS='env:log-workshop'
+      - DD_LOGS_ENABLED=true
+      - DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL=true
     ports:
       - "8126:8126"
     volumes:
@@ -14,6 +16,9 @@ services:
       - /proc/:/host/proc/:ro
       - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
       - /etc/passwd:/etc/passwd:ro
+      - /opt/datadog-agent/run:/opt/datadog-agent/run:rw
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "agent", "service": "agent"}]'
 
   frontend:
     environment:
@@ -34,6 +39,8 @@ services:
     depends_on:
       - agent
       - db
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "python", "service": "iot-frontend"}]'
 
   noder:
     environment:
@@ -46,14 +53,12 @@ services:
     command: nodemon server.js
     ports:
       - "5004:5004"
-    # uncomment below to live develop node
-    #volumes:
-    #  - "./node-api:/app"
-    #  - /app/node_modules
     depends_on:
       - agent
       - frontend
       - redis
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "python", "service": "users-api"}]'
 
   pumps:
     environment:
@@ -77,6 +82,8 @@ services:
       - frontend
       - agent
       - db
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "python", "service": "pumps-service"}]'
 
   redis:
     image: "redis:5.0-rc4-alpine"
@@ -87,6 +94,8 @@ services:
       - ./conf.d/redis.d/redis.conf:/usr/local/etc/redis/redis.conf
     depends_on:
       - agent
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "redis", "service": "redis"}]'
 
   sensors:
     environment:
@@ -109,6 +118,8 @@ services:
       - frontend
       - agent
       - db
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "python", "service": "sensors-api"}]'
 
   db:
     image: postgres:11-alpine
@@ -118,3 +129,5 @@ services:
     environment:
       - POSTGRES_PASSWORD
       - POSTGRES_USER
+    labels:
+      com.datadoghq.ad.logs: '[{"source": "postgresql", "service": "postgres"}]'
