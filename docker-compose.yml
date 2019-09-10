@@ -40,7 +40,7 @@ services:
       - agent
       - db
     labels:
-      com.datadoghq.ad.logs: '[{"source": "python", "service": "iot-frontend"}]'
+      com.datadoghq.ad.logs: '[{"source": "python", "service": "iot-frontend", "log_processing_rules": [{"type": "multi_line", "name": "StackTraces", "pattern" : "(2019|Traceback)"}]}]'
 
   noder:
     environment:
